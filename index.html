@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PV System Sizing for a Stand-alone Household System</title>
+<meta name="description" content="Size a stand-alone solar PV system for a household: array power, modules, battery bank, regulator and inverter. Based on the EEE 4111 Renewable Energy assignment.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='9' fill='%23F4B41A'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=Figtree:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --leaf:#0E3B2E; --meadow:#2F9E6E; --meadow-d:#237a54; --sun:#F4B41A; --sun-d:#b97f00;
+  --sky:#E3F4F1; --paper:#F8FBF7; --ink:#1B2B25; --muted:#5A6F66; --line:#CFE0D6; --warn:#C2410C; --batt:#2E78B7;
+  --display:"Bricolage Grotesque","Segoe UI",system-ui,sans-serif; --body:"Figtree","Segoe UI",system-ui,sans-serif;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;font-family:var(--body);font-size:16px;line-height:1.55;color:var(--ink);background:linear-gradient(180deg,#E6F5F0 0,#F8FBF7 560px) var(--paper);}
+h1,h2,h3{font-family:var(--display);margin:0;line-height:1.12;color:var(--leaf)}
+a{color:var(--meadow-d)}
+:focus-visible{outline:3px solid var(--sun);outline-offset:2px;border-radius:6px}
+.wrap{width:min(1180px,100% - 32px);margin-inline:auto}
+
+/* hero */
+.hero{padding:28px 0 36px}
+.brand{display:flex;align-items:center;gap:10px;font-family:var(--display);font-weight:700;color:var(--leaf);font-size:15px}
+.hero-grid{display:grid;grid-template-columns:1.1fr .9fr;gap:24px;align-items:center;margin-top:18px}
+.hero h1{font-size:clamp(34px,5.2vw,62px);font-weight:700;letter-spacing:-.02em;max-width:15ch}
+.hero p{max-width:52ch;font-size:18px;color:#3C5148;margin:18px 0 26px}
+.hero-art{width:100%;height:auto;display:block}
+.btn{font:600 15px var(--body);border-radius:999px;padding:11px 20px;border:1.5px solid transparent;cursor:pointer;text-decoration:none;display:inline-block;transition:background .15s,border-color .15s}
+.btn.primary{background:var(--leaf);color:#fff}.btn.primary:hover{background:#14513F}
+.btn.ghost{background:transparent;border-color:var(--leaf);color:var(--leaf)}.btn.ghost:hover{background:rgba(14,59,46,.07)}
+.btn.small{padding:7px 14px;font-size:14px}
+
+/* layout */
+.work{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:28px;align-items:start;padding-bottom:24px}
+.panel{background:#fff;border:1px solid var(--line);border-radius:20px;padding:24px;margin-bottom:20px}
+.panel h2{font-size:24px;margin-bottom:4px}
+.panel .sub{color:var(--muted);margin:0 0 18px;font-size:15px}
+.banner{display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap;background:var(--sky);border-radius:14px;padding:12px 16px;margin-bottom:20px;font-size:15px}
+.banner .acts{display:flex;gap:8px;flex-wrap:wrap}
+.grid{display:grid;gap:14px}
+.g2{grid-template-columns:repeat(2,minmax(0,1fr))}.g3{grid-template-columns:repeat(3,minmax(0,1fr))}.g4{grid-template-columns:repeat(4,minmax(0,1fr))}
+.f{display:flex;flex-direction:column;gap:4px;min-width:0}
+.f>span{font-size:13px;color:var(--muted);font-weight:500}
+input[type=number],input[type=text],select{width:100%;font:500 15px var(--body);color:var(--ink);background:#FBFDFB;border:1px solid #BCD0C5;border-radius:10px;padding:9px 11px}
+input:hover,select:hover{border-color:var(--meadow)}
+.hint{font-size:13px;color:var(--muted);margin:10px 0 0}
+.hint b{color:var(--ink)}
+
+/* loads */
+.lrow{display:grid;grid-template-columns:minmax(150px,2.2fr) repeat(3,minmax(70px,1fr)) auto auto auto;gap:10px;align-items:end;padding:12px 0;border-top:1px solid #E4EEE7}
+.lrow:first-child{border-top:0;padding-top:0}
+.chk{display:flex;align-items:center;gap:7px;font-size:13px;color:var(--muted);padding-bottom:10px;white-space:nowrap}
+.chk input{width:18px;height:18px;accent-color:var(--meadow)}
+.kwh{font-size:13px;color:var(--muted);padding-bottom:9px;text-align:right;min-width:74px}.kwh b{color:var(--leaf);font-size:15px}
+.x{border:0;background:#F1F5F2;color:var(--muted);width:34px;height:34px;border-radius:50%;font-size:20px;line-height:1;cursor:pointer;margin-bottom:3px}
+.x:hover{background:#FBE4D8;color:var(--warn)}
+.addbar{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px;align-items:center}
+.addbar select{width:auto;min-width:200px}
+.total{margin-top:16px;display:flex;justify-content:space-between;align-items:baseline;border-top:2px solid var(--leaf);padding-top:12px;font-weight:600}
+.total b{font-family:var(--display);font-size:26px;color:var(--leaf)}
+
+/* months */
+.months{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:10px}
+
+/* live panel */
+.live{position:sticky;top:16px;background:var(--leaf);color:#EAF6F0;border-radius:22px;padding:22px;box-shadow:0 12px 30px -12px rgba(14,59,46,.55)}
+.live h2{color:#fff;font-size:18px;font-weight:500;margin-bottom:14px}
+.live .item{padding:11px 0;border-top:1px solid rgba(255,255,255,.14);display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+.live .item:first-of-type{border-top:0}
+.live .item span{font-size:14px;color:#B8D8C8}
+.live .item b{font-family:var(--display);font-size:24px;color:#fff;font-weight:700;text-align:right}
+.live .item b small{font:500 13px var(--body);color:#B8D8C8;margin-left:4px}
+.live .big b{color:var(--sun);font-size:34px}
+.live .note{font-size:13px;color:#B8D8C8;margin:12px 0 0}
+.live .err{color:#FFD9A8;font-size:14px;margin:0}
+
+/* results */
+.empty{border:2px dashed var(--line);border-radius:16px;padding:22px;color:var(--muted)}
+.flow{display:grid;grid-template-columns:repeat(5,1fr);gap:0;margin:6px 0 4px}
+.node{position:relative;background:var(--paper);border:1px solid var(--line);border-radius:16px;padding:14px 12px 12px;text-align:center;border-top:5px solid var(--c)}
+.node h3{font-size:15px;color:var(--ink);font-family:var(--body);font-weight:600}
+.node b{display:block;font-family:var(--display);font-size:22px;color:var(--leaf);margin-top:4px}
+.node small{display:block;color:var(--muted);font-size:12.5px;line-height:1.35;margin-top:2px}
+.link{position:relative;align-self:center;height:3px;margin:0 -1px;z-index:0}
+.flow{grid-template-columns:1fr 34px 1fr 34px 1fr 34px 1fr 34px 1fr}
+.link{background:repeating-linear-gradient(90deg,var(--sun) 0 8px,transparent 8px 14px);background-size:14px 3px;animation:run 1s linear infinite}
+@keyframes run{to{background-position:14px 0}}
+.steps{counter-reset:s;display:grid;gap:14px}
+.step{display:grid;grid-template-columns:44px 1fr;gap:14px;padding:16px 0;border-top:1px solid #E4EEE7}
+.step:first-child{border-top:0}
+.step .n{width:36px;height:36px;border-radius:50%;background:var(--sky);color:var(--leaf);display:grid;place-items:center;font:700 16px var(--display)}
+.step h3{font-size:18px;margin-bottom:6px}
+.step>div:last-child{min-width:0}
+.eq{background:var(--paper);border-left:4px solid var(--meadow);border-radius:0 10px 10px 0;padding:8px 12px;margin:6px 0;font-size:15px;overflow-x:auto;overflow-wrap:anywhere}
+.eq em{font-style:normal;color:var(--sun-d);font-weight:600}
+.res{font-weight:600;color:var(--leaf)}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:22px}
+.bars .b{display:grid;grid-template-columns:minmax(90px,1.2fr) 3fr auto;gap:10px;align-items:center;font-size:14px;margin:7px 0}
+.bars .track{background:#EAF3ED;border-radius:99px;height:12px;overflow:hidden}
+.bars .fill{display:block;height:100%;background:var(--meadow);border-radius:99px}
+.cov{display:grid;grid-template-columns:repeat(12,1fr);gap:6px}
+.cov div{border-radius:10px;padding:6px 2px;text-align:center;font-size:12px;background:#E3F4EA;color:#1C6B47}
+.cov div b{display:block;font-size:14px}
+.cov .mid{background:#FFF1CC;color:#8A5E00}.cov .low{background:#FCE0D2;color:var(--warn)}
+svg text{font-family:var(--body)}
+.tbl{width:100%;border-collapse:collapse;font-size:15px}
+.tbl td{padding:9px 4px;border-top:1px solid #E4EEE7}.tbl td:last-child{text-align:right;font-weight:600;color:var(--leaf)}
+.tbl tr:first-child td{border-top:0}
+.actions{display:flex;gap:10px;flex-wrap:wrap}
+.warn{color:var(--warn);font-size:14px}
+.toast{position:fixed;left:50%;bottom:90px;transform:translateX(-50%);background:var(--leaf);color:#fff;padding:9px 16px;border-radius:99px;font-size:14px;opacity:0;pointer-events:none;transition:opacity .2s}
+.toast.on{opacity:1}
+footer{padding:26px 0 44px;color:var(--muted);font-size:14px}
+footer p{max-width:80ch;margin:6px 0}
+
+@media (max-width:1000px){
+  .hero-grid{grid-template-columns:1fr}.hero-art{max-width:520px}
+  .work{grid-template-columns:1fr}
+  .live{position:fixed;left:10px;right:10px;bottom:10px;top:auto;z-index:20;border-radius:18px;padding:10px 14px}
+  .live h2,.live .note{display:none}
+  .live #liveBody{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+  .live .item{display:block;border:0;padding:0;text-align:left}.live .item:nth-of-type(n+4){display:none}
+  .live .item b{display:block;font-size:19px;text-align:left}.live .big b{font-size:22px}
+  body{padding-bottom:84px}
+  .flow{grid-template-columns:1fr;gap:0}
+  .flow .link{width:3px;height:26px;margin:0 auto;background:repeating-linear-gradient(180deg,var(--sun) 0 8px,transparent 8px 14px);animation:runy 1s linear infinite}
+  @keyframes runy{to{background-position:0 14px}}
+}
+@media (max-width:760px){
+  .g3,.g4{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .months{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .lrow{grid-template-columns:repeat(3,minmax(0,1fr));}
+  .lrow .name{grid-column:1/-1}
+  .two{grid-template-columns:1fr}
+  .cov{grid-template-columns:repeat(6,1fr)}
+  .panel{padding:18px;border-radius:16px}
+}
+@media (max-width:460px){.g2{grid-template-columns:1fr}}
+@media (prefers-reduced-motion:reduce){.link{animation:none}html{scroll-behavior:auto}}
+@media print{
+  body{background:#fff}.hero,#inputs,.live,.banner,.actions,.toast,footer .noprint{display:none!important}
+  .work{display:block}.panel{border:1px solid #bbb;break-inside:avoid}
+}
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="wrap">
+    <div class="brand">
+      <svg width="28" height="28" viewBox="0 0 32 32" aria-hidden="true"><circle cx="16" cy="16" r="7" fill="#F4B41A"/><g stroke="#F4B41A" stroke-width="2.4" stroke-linecap="round"><path d="M16 3v4M16 25v4M3 16h4M25 16h4M6.8 6.8l2.8 2.8M22.4 22.4l2.8 2.8M25.2 6.8l-2.8 2.8M9.6 22.4l-2.8 2.8"/></g></svg>
+      EEE 4111 &middot; Renewable Energy
+    </div>
+    <div class="hero-grid">
+      <div>
+        <h1>PV System Sizing for a Stand-alone Household System</h1>
+        <p>List your appliances, add the sunshine at your site, and get the solar array, battery bank, charge regulator and inverter you need. Every step of the calculation is shown.</p>
+        <a class="btn primary" href="#inputs">Size my system</a>
+        <a class="btn ghost" href="#steps">See the method</a>
+      </div>
+      <svg class="hero-art" viewBox="0 0 520 300" role="img" aria-label="The sun rising along its arc above a row of solar panels">
+        <path d="M30 270 Q260 -70 490 270" fill="none" stroke="#2F9E6E" stroke-width="2.5" stroke-dasharray="3 9" stroke-linecap="round"/>
+        <line x1="10" y1="270" x2="510" y2="270" stroke="#0E3B2E" stroke-width="3" stroke-linecap="round"/>
+        <g id="sunG"><circle r="52" fill="#F4B41A" opacity=".22"/><circle r="36" fill="#F4B41A" opacity=".35"/><circle r="22" fill="#F4B41A"/>
+          <animateMotion id="sunAnim" dur="2.8s" fill="freeze" keyPoints="0;0.5" keyTimes="0;1" calcMode="spline" keySplines="0.25 0.6 0.3 1" path="M30 270 Q260 -70 490 270"/></g>
+        <g fill="#0E3B2E"><polygon points="150,270 190,236 250,236 222,270"/><polygon points="236,270 264,236 324,236 322,270"/><polygon points="336,270 336,236 396,236 372,270"/></g>
+        <g stroke="#2F9E6E" stroke-width="1.4"><path d="M170 253h70M205 236l-14 34M242 236l-12 34M264 253h56M294 236l-4 34M336 253h50M366 236v34"/></g>
+      </svg>
+    </div>
+  </div>
+</header>
+
+<main class="wrap" id="inputs">
+  <div class="banner" id="banner">
+    <span><b>Example loaded:</b> the Debidwar, Cumilla household from the original report. Change any value, or clear everything and enter your own.</span>
+    <span class="acts"><button class="btn ghost small" id="btnExample" type="button">Load example</button><button class="btn ghost small" id="btnClear" type="button">Clear all</button></span>
+  </div>
+
+  <div class="work">
+    <div>
+      <section class="panel" aria-labelledby="h-load">
+        <h2 id="h-load">Appliances</h2>
+        <p class="sub">Daily energy = quantity &times; power &times; hours of use. For a fridge or other compressor load, enter the average hours it actually runs.</p>
+        <div id="loads"></div>
+        <div class="addbar">
+          <button class="btn ghost small" id="addRow" type="button">Add appliance</button>
+          <label class="f"><span class="sr" style="position:absolute;left:-9999px">Add a common appliance</span>
+            <select id="preset" aria-label="Add a common appliance"><option value="">Add a common appliance&hellip;</option></select></label>
+        </div>
+        <div class="total"><span>Total daily load</span><span><b id="totalLoad">0.00</b> kWh/day</span></div>
+        <p class="hint">&ldquo;Runs at peak&rdquo; marks appliances that can be on at the same time. They set the inverter size.</p>
+      </section>
+
+      <section class="panel" aria-labelledby="h-site">
+        <h2 id="h-site">Location and sunshine</h2>
+        <p class="sub">Get daily irradiation on the tilted plane for your site from <a href="https://re.jrc.ec.europa.eu/pvg_tools/en/#PVP" target="_blank" rel="noopener">PVGIS</a> (Monthly radiation, your tilt angle) and enter it below. The sizing uses the lowest month, so the system works all year.</p>
+        <div class="grid g3">
+          <label class="f"><span>Latitude (&deg;)</span><input id="lat" type="number" step="any" inputmode="decimal"></label>
+          <label class="f"><span>Longitude (&deg;)</span><input id="lon" type="number" step="any" inputmode="decimal"></label>
+          <label class="f"><span>Module tilt (&deg;)</span><input id="tilt" type="number" step="any" min="0" max="90" inputmode="decimal"></label>
+        </div>
+        <p class="hint" id="orient"></p>
+        <p class="hint"><button class="btn ghost small" id="tiltLat" type="button">Set tilt equal to latitude</button> A tilt close to your latitude is a good all-year starting point.</p>
+        <h3 style="font-size:17px;margin:20px 0 10px">Daily irradiation by month (kWh/m&sup2;/day)</h3>
+        <div class="months" id="months"></div>
+        <div class="grid g2" style="margin-top:14px">
+          <label class="f"><span>Design peak sun hours (optional override)</span><input id="pshOverride" type="number" step="any" min="0" placeholder="Leave empty to use the lowest month" inputmode="decimal"></label>
+        </div>
+      </section>
+
+      <section class="panel" aria-labelledby="h-eff">
+        <h2 id="h-eff">Efficiencies</h2>
+        <p class="sub">Typical values are pre-filled. Replace them with datasheet values if you have them.</p>
+        <div class="grid g4">
+          <label class="f"><span>Cable (%)</span><input id="eCable" type="number" step="any" min="1" max="100" inputmode="decimal"></label>
+          <label class="f"><span>Charge regulator (%)</span><input id="eReg" type="number" step="any" min="1" max="100" inputmode="decimal"></label>
+          <label class="f"><span>Battery (%)</span><input id="eBat" type="number" step="any" min="1" max="100" inputmode="decimal"></label>
+          <label class="f"><span>Inverter (%)</span><input id="eInv" type="number" step="any" min="1" max="100" inputmode="decimal"></label>
+        </div>
+        <div class="grid g2" style="margin-top:14px">
+          <label class="f"><span>Extra losses: dust, heat, mismatch (%)</span><input id="derate" type="number" step="any" min="0" max="60" inputmode="decimal"></label>
+          <label class="chk" style="padding-top:20px"><input id="roundEta" type="checkbox"><span style="white-space:normal">Round the combined efficiency to 2 decimals (as in the report)</span></label>
+        </div>
+        <p class="hint">Extra losses are not in the original method. Real systems lose 10&ndash;20% to heat and dust, so 10 is a sensible value when you want a more cautious design. 0 matches the report.</p>
+      </section>
+
+      <section class="panel" aria-labelledby="h-sys">
+        <h2 id="h-sys">System design</h2>
+        <p class="sub">Choose the DC voltage and the building blocks. Higher voltage means lower current and cheaper cables.</p>
+        <div class="grid g4">
+          <label class="f"><span>System voltage (V)</span><select id="vdc"><option>12</option><option>24</option><option>48</option><option>96</option><option>120</option><option>240</option></select></label>
+          <label class="f"><span>Module voltage (V)</span><input id="vm" type="number" step="any" min="1" inputmode="decimal"></label>
+          <label class="f"><span>Module power (Wp)</span><input id="pm" type="number" step="any" min="1" inputmode="decimal"></label>
+          <label class="f"><span>Module area (m&sup2;)</span><input id="am" type="number" step="any" min="0.01" inputmode="decimal"></label>
+        </div>
+        <div class="grid g4" style="margin-top:14px">
+          <label class="f"><span>Days of autonomy</span><input id="autonomy" type="number" step="any" min="0.5" inputmode="decimal"></label>
+          <label class="f"><span>Depth of discharge (%)</span><input id="dod" type="number" step="any" min="10" max="100" inputmode="decimal"></label>
+          <label class="f"><span>Battery unit voltage (V)</span><input id="vbat" type="number" step="any" min="1" inputmode="decimal"></label>
+          <label class="f"><span>Battery unit capacity (Ah)</span><input id="ahbat" type="number" step="any" min="1" inputmode="decimal"></label>
+        </div>
+        <div class="grid g2" style="margin-top:14px">
+          <label class="f"><span>Battery sizing method</span>
+            <select id="battMethod"><option value="report">Report method (load &times; cable efficiency)</option><option value="strict">Conservative (divide by cable and inverter efficiency)</option></select></label>
+          <label class="f"><span>Safety margin on regulator and inverter (%)</span><input id="margin" type="number" step="any" min="0" max="100" inputmode="decimal"></label>
+        </div>
+        <p class="hint">The conservative method treats cable and inverter losses as extra energy the battery must supply, so it gives a larger bank. A margin of 25% is common for inverters.</p>
+      </section>
+    </div>
+
+    <aside class="live" aria-live="polite" aria-label="Live result">
+      <h2>Your system</h2>
+      <div id="liveBody"></div>
+      <p class="note" id="liveNote"></p>
+    </aside>
+  </div>
+
+  <div id="detail"></div>
+</main>
+
+<footer>
+  <div class="wrap">
+    <p>Built from the EEE 4111 Renewable Energy assignment by Kazi Nazmul Hasan, Barishal Engineering College. <a href="docs/Assignment_01.docx">Read the original report</a>.</p>
+    <p>Irradiation data comes from PVGIS &copy; European Union. This is a first-pass design estimate; have a qualified installer check it before you buy equipment.</p>
+  </div>
+</footer>
+<div class="toast" id="toast" role="status"></div>
+
+<script>
+(function(){
+"use strict";
+var MONTHS=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+var PRESETS=[["LED bulb",1,9,5],["Ceiling fan",1,75,10],["Refrigerator",1,150,10],["Television",1,100,5],["Laptop",1,60,6],["Phone charger",1,10,3],["Wi-Fi router",1,12,24],["Water pump",1,750,1],["Washing machine",1,500,1],["Iron",1,1000,0.5],["Microwave oven",1,1200,0.3],["Air conditioner",1,1500,6]];
+var EXAMPLE={
+  loads:[["Light",10,95,4,1],["Energy saving light",4,45,6,1],["Fridge",2,200,24,1],["Fan",6,150,12,1],["Iron",1,1000,0.5,1],["TV",2,138,5,1],["Washing machine",1,2200,1,1],["Dishwasher",1,1900,1,0]],
+  irr:[6.16,6.17,5.95,6.19,5.08,4.03,4.55,3.30,4.59,4.80,5.19,4.63],
+  p:{lat:23.6004,lon:90.9881,tilt:23,pshOverride:"",eCable:95,eReg:95,eBat:80,eInv:95,roundEta:true,derate:0,vdc:"48",vm:12,pm:50,am:0.4,autonomy:5,dod:70,battMethod:"report",vbat:12,ahbat:200,margin:0}
+};
+var BLANK_P={lat:"",lon:"",tilt:"",pshOverride:"",eCable:95,eReg:95,eBat:80,eInv:95,roundEta:false,derate:0,vdc:"48",vm:12,pm:100,am:0.55,autonomy:3,dod:70,battMethod:"report",vbat:12,ahbat:200,margin:0};
+var PIDS=["lat","lon","tilt","pshOverride","eCable","eReg","eBat","eInv","roundEta","derate","vdc","vm","pm","am","autonomy","dod","battMethod","vbat","ahbat","margin"];
+var $=function(id){return document.getElementById(id)};
+var state={loads:[],irr:[]};
+
+function esc(s){return String(s).replace(/[&<>"']/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]})}
+function fx(n,d){if(!isFinite(n))return "–";return Number(n).toLocaleString("en-US",{minimumFractionDigits:d===undefined?2:d,maximumFractionDigits:d===undefined?2:d})}
+function num(v){var n=parseFloat(v);return isFinite(n)?n:NaN}
+function toast(t){var el=$("toast");el.textContent=t;el.classList.add("on");clearTimeout(toast.t);toast.t=setTimeout(function(){el.classList.remove("on")},1800)}
+
+/* ---------- form <-> state ---------- */
+function setParams(p){PIDS.forEach(function(id){var el=$(id);if(el.type==="checkbox")el.checked=!!p[id];else el.value=p[id]===undefined?"":p[id]})}
+function getParams(){var p={};PIDS.forEach(function(id){var el=$(id);p[id]=el.type==="checkbox"?el.checked:el.value});return p}
+function rowHTML(r,i){
+  return '<div class="lrow" data-i="'+i+'">'+
+  '<label class="f name"><span>Appliance</span><input type="text" data-k="name" value="'+esc(r.name)+'" placeholder="e.g. Ceiling fan"></label>'+
+  '<label class="f"><span>Quantity</span><input type="number" data-k="qty" min="0" step="1" inputmode="numeric" value="'+esc(r.qty)+'"></label>'+
+  '<label class="f"><span>Power (W)</span><input type="number" data-k="power" min="0" step="any" inputmode="decimal" value="'+esc(r.power)+'"></label>'+
+  '<label class="f"><span>Hours per day</span><input type="number" data-k="hours" min="0" max="24" step="any" inputmode="decimal" value="'+esc(r.hours)+'"></label>'+
+  '<label class="chk"><input type="checkbox" data-k="sim"'+(r.sim?' checked':'')+'><span>Runs at peak</span></label>'+
+  '<div class="kwh"><span>Daily</span><br><b data-d>0.00</b> kWh</div>'+
+  '<button class="x" type="button" data-rm aria-label="Remove '+esc(r.name||"appliance")+'">&times;</button></div>';
+}
+function renderRows(){
+  $("loads").innerHTML=state.loads.length?state.loads.map(rowHTML).join(""):'<div class="empty">No appliances yet. Add one to start.</div>';
+}
+function renderMonths(){
+  $("months").innerHTML=MONTHS.map(function(m,i){return '<label class="f"><span>'+m+'</span><input type="number" data-m="'+i+'" step="any" min="0" inputmode="decimal" value="'+esc(state.irr[i]===undefined?"":state.irr[i])+'"></label>'}).join("");
+}
+function loadData(d,note){
+  state.loads=d.loads.map(function(r){return {name:r[0],qty:r[1],power:r[2],hours:r[3],sim:!!r[4]}});
+  state.irr=d.irr.slice();
+  setParams(d.p);renderRows();renderMonths();
+  $("banner").querySelector("span").innerHTML=note;
+  calc();
+}
+
+/* ---------- calculation ---------- */
+function compute(){
+  var p=getParams(),err=[];
+  var L=state.loads.map(function(r){return {name:r.name||"Unnamed",qty:num(r.qty)||0,power:num(r.power)||0,hours:num(r.hours)||0,sim:r.sim}});
+  var load=0;L.forEach(function(r){r.kwh=r.qty*r.power*r.hours/1000;load+=r.kwh;if(r.hours>24)err.push("“"+r.name+"” runs more than 24 hours a day.")});
+  var irr=state.irr.map(num);var haveAll=irr.length===12&&irr.every(function(x){return isFinite(x)&&x>0});
+  var override=num(p.pshOverride);
+  var psh,worstIdx=-1;
+  if(isFinite(override)&&override>0){psh=override}
+  else if(haveAll){var mn=Math.min.apply(null,irr);worstIdx=irr.indexOf(mn);psh=mn}
+  else err.push("Enter irradiation for all 12 months, or a design peak sun hours value.");
+  if(!(load>0))err.push("Add at least one appliance with power and hours of use.");
+  var e={cable:num(p.eCable)/100,reg:num(p.eReg)/100,bat:num(p.eBat)/100,inv:num(p.eInv)/100};
+  Object.keys(e).forEach(function(k){if(!(e[k]>0&&e[k]<=1))err.push("Efficiencies must be between 1 and 100%.")});
+  var vdc=num(p.vdc),vm=num(p.vm),pm=num(p.pm),am=num(p.am),n=num(p.autonomy),dod=num(p.dod)/100,vb=num(p.vbat),ahb=num(p.ahbat);
+  var der=(num(p.derate)||0)/100,mar=(num(p.margin)||0)/100;
+  if(!(vm>0&&pm>0&&am>0))err.push("Enter the module voltage, power and area.");
+  if(!(n>0))err.push("Days of autonomy must be above 0.");
+  if(!(dod>0&&dod<=1))err.push("Depth of discharge must be between 1 and 100%.");
+  if(!(vb>0&&ahb>0))err.push("Enter the battery unit voltage and capacity.");
+  if(!(der>=0&&der<0.9))err.push("Extra losses must be between 0 and 90%.");
+  err=err.filter(function(x,i){return err.indexOf(x)===i});
+  if(err.length)return {err:err,L:L,load:load};
+
+  var etaRaw=e.cable*e.reg*e.bat*e.inv;
+  var eta=p.roundEta?Math.round(etaRaw*100)/100:etaRaw;
+  var etaSys=eta*(1-der);
+  var Epv=load/etaSys;
+  var Ppeak=Math.round(Epv/psh*100)/100;
+  var Ns=Math.ceil(vdc/vm-1e-9);
+  var NpExact=Ppeak*1000/(pm*Ns),Np=Math.ceil(NpExact-1e-9);
+  var N=Ns*Np,area=N*am,Pinst=N*pm/1000;
+  var strict=p.battMethod==="strict";
+  var Cb=strict?n*load*1000/(vdc*dod*e.cable*e.inv):n*load*1000*e.cable/(vdc*dod);
+  var Ebat=Cb*vdc/1000;
+  var Nbs=Math.ceil(vdc/vb-1e-9),Nbp=Math.ceil(Cb/ahb-1e-9);
+  var Iin=Ppeak*1000/vdc*(1+mar);
+  var Pout=L.filter(function(r){return r.sim}).reduce(function(s,r){return s+r.qty*r.power},0)/1000*(1+mar);
+  var Iout=Pout*1000/vdc;
+  var cov=irr.map(function(h){return haveAll?(Pinst*h*etaSys)/load:NaN});
+  return {err:[],p:p,L:L,load:load,irr:irr,haveAll:haveAll,psh:psh,worstIdx:worstIdx,override:isFinite(override)&&override>0,
+    e:e,etaRaw:etaRaw,eta:eta,der:der,etaSys:etaSys,Epv:Epv,Ppeak:Ppeak,vdc:vdc,vm:vm,pm:pm,am:am,Ns:Ns,NpExact:NpExact,Np:Np,N:N,area:area,Pinst:Pinst,
+    n:n,dod:dod,strict:strict,Cb:Cb,Ebat:Ebat,vb:vb,ahb:ahb,Nbs:Nbs,Nbp:Nbp,mar:mar,Iin:Iin,Pout:Pout,Iout:Iout,cov:cov};
+}
+
+function calc(){
+  var R=compute();window.__R=R;
+  var total=R.load||0;$("totalLoad").textContent=fx(total);
+  document.querySelectorAll(".lrow").forEach(function(row){var r=R.L&&R.L[+row.dataset.i];row.querySelector("[data-d]").textContent=r?fx(r.kwh):"0.00"});
+  var lat=num($("lat").value);
+  $("orient").innerHTML=isFinite(lat)?"Face the modules <b>true "+(lat>=0?"south":"north")+"</b> for best yearly output at this latitude.":"";
+  renderLive(R);renderDetail(R);
+}
+
+function renderLive(R){
+  var b=$("liveBody"),nt=$("liveNote");
+  if(R.err.length){b.innerHTML='<p class="err">'+R.err.map(esc).join("<br>")+'</p>';nt.textContent="";return}
+  b.innerHTML=
+   '<div class="item big"><span>Array power</span><b>'+fx(R.Ppeak)+'<small>kWp</small></b></div>'+
+   '<div class="item"><span>PV modules</span><b>'+R.N+'<small>'+R.Ns+' &times; '+R.Np+'</small></b></div>'+
+   '<div class="item"><span>Battery bank</span><b>'+fx(R.Cb,0)+'<small>Ah @ '+R.vdc+' V</small></b></div>'+
+   '<div class="item"><span>Array area</span><b>'+fx(R.area,0)+'<small>m&sup2;</small></b></div>'+
+   '<div class="item"><span>Inverter</span><b>'+fx(R.Pout,2)+'<small>kW</small></b></div>';
+  nt.textContent="Designed for "+(R.override?"your override":(MONTHS[R.worstIdx]+", the lowest month"))+" at "+fx(R.psh)+" peak sun hours.";
+}
+
+function flowHTML(R){
+  var nodes=[["PV array","#F4B41A",fx(R.Ppeak)+" kWp",R.N+" modules of "+fx(R.pm,0)+" Wp"],
+    ["Charge regulator","#2F9E6E",fx(R.Iin,0)+" A",R.vdc+" V DC input"],
+    ["Battery bank","#2E78B7",fx(R.Cb,0)+" Ah",fx(R.Ebat,1)+" kWh at "+R.vdc+" V"],
+    ["Inverter","#7A5BB5",fx(R.Pout,2)+" kW",fx(R.Iout,0)+" A at "+R.vdc+" V"],
+    ["AC loads","#0E3B2E",fx(R.load)+" kWh",fx(R.load/24*1000,0)+" W average"]];
+  return nodes.map(function(n,i){return (i?'<div class="link" aria-hidden="true"></div>':'')+'<div class="node" style="--c:'+n[1]+'"><h3>'+n[0]+'</h3><b>'+n[2]+'</b><small>'+n[3]+'</small></div>'}).join("");
+}
+
+function irrChart(R){
+  var W=640,H=230,pl=36,pr=8,pt=14,pb=28,max=Math.max.apply(null,R.irr)*1.18,bw=(W-pl-pr)/12,ch=H-pt-pb,s="";
+  [0,0.5,1].forEach(function(t){var v=max/1.18*t,y=pt+ch-(v/max)*ch;s+='<line x1="'+pl+'" x2="'+(W-pr)+'" y1="'+y+'" y2="'+y+'" stroke="#E1ECE5"/><text x="'+(pl-6)+'" y="'+(y+4)+'" text-anchor="end" font-size="11" fill="#5A6F66">'+fx(v,1)+'</text>'});
+  R.irr.forEach(function(v,i){var h=(v/max)*ch,x=pl+i*bw+bw*.16,w=bw*.68,y=pt+ch-h,isW=i===R.worstIdx&&!R.override;
+    s+='<rect x="'+x+'" y="'+y+'" width="'+w+'" height="'+h+'" rx="5" fill="'+(isW?"#F4B41A":"#2F9E6E")+'"/>';
+    s+='<text x="'+(x+w/2)+'" y="'+(y-4)+'" text-anchor="middle" font-size="11" fill="#1B2B25" font-weight="'+(isW?700:500)+'">'+fx(v)+'</text>';
+    s+='<text x="'+(x+w/2)+'" y="'+(H-9)+'" text-anchor="middle" font-size="11.5" fill="#5A6F66">'+MONTHS[i]+'</text>'});
+  return '<svg viewBox="0 0 '+W+' '+H+'" width="100%" role="img" aria-label="Daily irradiation by month; the lowest month is highlighted">'+s+'</svg>';
+}
+
+function loadBars(R){
+  var mx=Math.max.apply(null,R.L.map(function(r){return r.kwh}))||1;
+  return '<div class="bars">'+R.L.filter(function(r){return r.kwh>0}).sort(function(a,b){return b.kwh-a.kwh}).map(function(r){
+    return '<div class="b"><span>'+esc(r.name)+'</span><span class="track"><span class="fill" style="width:'+(r.kwh/mx*100)+'%"></span></span><b>'+fx(r.kwh)+' kWh</b></div>'}).join("")+'</div>';
+}
+
+function covHTML(R){
+  if(!R.haveAll)return '<p class="hint">Enter all 12 monthly values to see the month-by-month check.</p>';
+  var low=0;
+  var h='<div class="cov">'+R.cov.map(function(c,i){var pc=c*100,cls=pc>=99.5?"":(pc>=90?"mid":"low");if(pc<99.5)low++;return '<div class="'+cls+'"><span>'+MONTHS[i]+'</span><b>'+fx(pc,0)+'%</b></div>'}).join("")+'</div>';
+  h+='<p class="hint">'+(low?'<span class="warn">In '+low+' month'+(low>1?'s':'')+' the array produces less than the daily load. Raise the design peak sun hours or add modules.</span>':'The installed array covers the daily load in <b>every month</b>, so the battery only has to bridge cloudy days.')+'</p>';
+  return h;
+}
+
+function renderDetail(R){
+  var d=$("detail");
+  if(R.err.length){d.innerHTML='<section class="panel" id="steps"><h2>Results</h2><div class="empty"><b>Complete the inputs to see results.</b><br>'+R.err.map(esc).join("<br>")+'</div></section>';return}
+  var strictNote=R.strict?"Conservative method":"Report method";
+  var h='';
+  h+='<section class="panel"><h2>System at a glance</h2><p class="sub">Energy flows from the sun to your appliances through four components.</p><div class="flow">'+flowHTML(R)+'</div>'+
+     '<div class="actions" style="margin-top:18px"><button class="btn primary small" id="btnCopy" type="button">Copy summary</button><button class="btn ghost small" id="btnPrint" type="button">Print or save as PDF</button></div></section>';
+  h+='<section class="panel"><div class="two"><div><h2>Sunshine by month</h2><p class="sub">The lowest month sets the design.</p>'+irrChart(R)+'</div><div><h2>Where the energy goes</h2><p class="sub">Daily use by appliance.</p>'+loadBars(R)+'</div></div></section>';
+  h+='<section class="panel"><h2>Does the array cover every month?</h2><p class="sub">Estimated daily output of the installed array compared with your daily load.</p>'+covHTML(R)+'</section>';
+
+  var eq=function(s){return '<div class="eq">'+s+'</div>'};
+  h+='<section class="panel" id="steps"><h2>How the numbers were calculated</h2><p class="sub">The same six steps as the report, with your values filled in.</p><div class="steps">';
+  h+='<div class="step"><div class="n">1</div><div><h3>Load, location and tilt</h3>'+eq('Daily load = &Sigma; (quantity &times; power &times; hours) / 1000 = <span class="res">'+fx(R.load)+' kWh/day</span>')+
+     '<p class="hint">Tilt '+(R.p.tilt?fx(num(R.p.tilt),1)+'&deg;':'not set')+(R.p.lat?' at latitude '+fx(num(R.p.lat),4)+'&deg;':'')+'.</p></div></div>';
+  h+='<div class="step"><div class="n">2</div><div><h3>Irradiation and peak sun hours</h3>'+eq('PSH = '+(R.override?'your override':'lowest daily irradiation ('+MONTHS[R.worstIdx]+')')+' = <span class="res">'+fx(R.psh)+' h/day</span>')+
+     '<p class="hint">1 kWh/m&sup2;/day equals 1 peak sun hour, the time the sun would shine at 1000 W/m&sup2;.</p></div></div>';
+  h+='<div class="step"><div class="n">3</div><div><h3>System configuration</h3><p style="margin:0">Stand-alone: batteries store energy for the night and cloudy days, and an inverter supplies the AC appliances.</p></div></div>';
+  h+='<div class="step"><div class="n">4</div><div><h3>Installed power</h3>'+
+     eq('&eta;<sub>total</sub> = &eta;<sub>cable</sub> &times; &eta;<sub>reg</sub> &times; &eta;<sub>bat</sub> &times; &eta;<sub>inv</sub> = '+fx(R.e.cable,2)+' &times; '+fx(R.e.reg,2)+' &times; '+fx(R.e.bat,2)+' &times; '+fx(R.e.inv,2)+' = '+fx(R.etaRaw,4)+(R.p.roundEta?' &rarr; <span class="res">'+fx(R.eta,2)+'</span>':''))+
+     (R.der>0?eq('&eta;<sub>system</sub> = &eta;<sub>total</sub> &times; (1 &minus; extra losses) = '+fx(R.eta,3)+' &times; '+fx(1-R.der,2)+' = <span class="res">'+fx(R.etaSys,3)+'</span>'):'')+
+     eq('P<sub>PV</sub> = Load / &eta;<sub>system</sub> = '+fx(R.load)+' / '+fx(R.etaSys,R.p.roundEta&&!R.der?2:3)+' = <span class="res">'+fx(R.Epv)+' kWh/day</span>')+
+     eq('P<sub>peak</sub> = P<sub>PV</sub> / PSH = '+fx(R.Epv)+' / '+fx(R.psh)+' = <span class="res">'+fx(R.Ppeak)+' kWp</span>')+
+     eq('Modules in series N<sub>s</sub> = V<sub>DC</sub> / V<sub>m</sub> = '+R.vdc+' / '+fx(R.vm,0)+' = <span class="res">'+R.Ns+'</span>')+
+     eq('Strings N<sub>p</sub> = P<sub>peak</sub> / (P<sub>m</sub> &times; N<sub>s</sub>) = '+fx(R.Ppeak*1000,0)+' / ('+fx(R.pm,0)+' &times; '+R.Ns+') = '+fx(R.NpExact)+' &rarr; <span class="res">'+R.Np+'</span> (rounded up)')+
+     (R.vdc%R.vm?'<p class="warn">System voltage is not a multiple of the module voltage, so each string is slightly above '+R.vdc+' V. Check the regulator&rsquo;s input limit.</p>':'')+'</div></div>';
+  h+='<div class="step"><div class="n">5</div><div><h3>Number of PV modules</h3>'+
+     eq('N = N<sub>s</sub> &times; N<sub>p</sub> = '+R.Ns+' &times; '+R.Np+' = <span class="res">'+R.N+' modules</span> ('+fx(R.Pinst)+' kWp installed)')+
+     eq('Area = N &times; A<sub>m</sub> = '+R.N+' &times; '+fx(R.am)+' = <span class="res">'+fx(R.area,1)+' m&sup2;</span>')+'</div></div>';
+  h+='<div class="step"><div class="n">6</div><div><h3>Battery, regulator and inverter</h3>'+
+     (R.strict?eq('C<sub>B</sub> = n &times; Load / (V<sub>DC</sub> &times; DoD &times; &eta;<sub>cable</sub> &times; &eta;<sub>inv</sub>) = '+R.n+' &times; '+fx(R.load*1000,0)+' / ('+R.vdc+' &times; '+fx(R.dod,2)+' &times; '+fx(R.e.cable,2)+' &times; '+fx(R.e.inv,2)+') = <span class="res">'+fx(R.Cb,0)+' Ah</span>')
+            :eq('C<sub>B</sub> = n &times; Load &times; &eta;<sub>cable</sub> / (V<sub>DC</sub> &times; DoD) = '+R.n+' &times; '+fx(R.load*1000,0)+' &times; '+fx(R.e.cable,2)+' / ('+R.vdc+' &times; '+fx(R.dod,2)+') = <span class="res">'+fx(R.Cb,0)+' Ah</span>'))+
+     '<p class="hint" style="margin:2px 0 8px">'+strictNote+'. That is '+fx(R.Ebat,1)+' kWh, or '+R.Nbs+' in series &times; '+R.Nbp+' in parallel = <b>'+(R.Nbs*R.Nbp)+' batteries</b> of '+fx(R.vb,0)+' V '+fx(R.ahb,0)+' Ah.</p>'+
+     eq('Regulator: V<sub>in</sub> = V<sub>DC</sub> = '+R.vdc+' V;&nbsp; I<sub>in</sub> = P<sub>peak</sub> / V<sub>DC</sub>'+(R.mar?' &times; (1 + margin)':'')+' = <span class="res">'+fx(R.Iin)+' A</span>')+
+     eq('Inverter: P<sub>out</sub> = sum of peak-time loads'+(R.mar?' &times; (1 + margin)':'')+' = <span class="res">'+fx(R.Pout,3)+' kW</span>;&nbsp; I = P<sub>out</sub> / V<sub>out</sub> = <span class="res">'+fx(R.Iout,0)+' A</span> at '+R.vdc+' V')+'</div></div>';
+  h+='</div></section>';
+  d.innerHTML=h;
+  $("btnCopy").onclick=function(){copySummary(R)};
+  $("btnPrint").onclick=function(){window.print()};
+}
+
+function summaryText(R){
+  return ["PV System Sizing for a Stand-alone Household System","",
+  "Daily load: "+fx(R.load)+" kWh/day","Design peak sun hours: "+fx(R.psh)+" h/day","Combined efficiency: "+fx(R.etaSys,3),
+  "Required PV energy: "+fx(R.Epv)+" kWh/day","Array power: "+fx(R.Ppeak)+" kWp","System voltage: "+R.vdc+" V",
+  "PV modules: "+R.N+" ("+R.Ns+" in series x "+R.Np+" strings, "+fx(R.pm,0)+" Wp each)","Array area: "+fx(R.area,1)+" m2",
+  "Battery bank: "+fx(R.Cb,0)+" Ah at "+R.vdc+" V ("+fx(R.Ebat,1)+" kWh, "+R.n+" days autonomy, "+fx(R.dod*100,0)+"% DoD)",
+  "Regulator: "+R.vdc+" V, "+fx(R.Iin,0)+" A input","Inverter: "+fx(R.Pout,2)+" kW, "+fx(R.Iout,0)+" A at "+R.vdc+" V"].join("\n");
+}
+function copySummary(R){
+  var t=summaryText(R);
+  if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(t).then(function(){toast("Summary copied")},function(){toast("Copy failed. Select the text manually.")})}
+  else{var ta=document.createElement("textarea");ta.value=t;document.body.appendChild(ta);ta.select();try{document.execCommand("copy");toast("Summary copied")}catch(e){toast("Copy failed")}ta.remove()}
+}
+
+/* ---------- events ---------- */
+$("loads").addEventListener("input",function(e){
+  var row=e.target.closest(".lrow");if(!row)return;var k=e.target.dataset.k;if(!k)return;
+  state.loads[+row.dataset.i][k]=k==="sim"?e.target.checked:e.target.value;calc();
+});
+$("loads").addEventListener("click",function(e){
+  var rm=e.target.closest("[data-rm]");if(!rm)return;
+  state.loads.splice(+rm.closest(".lrow").dataset.i,1);renderRows();calc();
+});
+$("months").addEventListener("input",function(e){var i=e.target.dataset.m;if(i===undefined)return;state.irr[+i]=e.target.value;calc()});
+PIDS.forEach(function(id){$(id).addEventListener("input",calc);$(id).addEventListener("change",calc)});
+$("addRow").addEventListener("click",function(){state.loads.push({name:"",qty:1,power:"",hours:"",sim:true});renderRows();calc();var ins=$("loads").querySelectorAll(".lrow");var last=ins[ins.length-1];if(last)last.querySelector("input").focus()});
+$("preset").innerHTML+=PRESETS.map(function(p,i){return '<option value="'+i+'">'+p[0]+' ('+p[2]+' W)</option>'}).join("");
+$("preset").addEventListener("change",function(){var v=this.value;if(v==="")return;var p=PRESETS[+v];state.loads.push({name:p[0],qty:p[1],power:p[2],hours:p[3],sim:true});this.value="";renderRows();calc()});
+$("tiltLat").addEventListener("click",function(){var l=num($("lat").value);if(!isFinite(l)){toast("Enter the latitude first");return}$("tilt").value=Math.round(Math.abs(l));calc()});
+$("btnExample").addEventListener("click",function(){loadData(EXAMPLE,"<b>Example loaded:</b> the Debidwar, Cumilla household from the original report. The report rounded up to 70 strings (280 modules); this calculator rounds up to the next whole string.")});
+$("btnClear").addEventListener("click",function(){loadData({loads:[],irr:[],p:BLANK_P},"<b>Your own system:</b> add your appliances and monthly irradiation below. Efficiency and design values are typical defaults.");$("addRow").click()});
+
+/* ---------- start ---------- */
+if(window.matchMedia&&window.matchMedia("(prefers-reduced-motion: reduce)").matches){
+  var a=$("sunAnim");if(a)a.remove();$("sunG").setAttribute("transform","translate(260 100)");
+}
+loadData(EXAMPLE,"<b>Example loaded:</b> the Debidwar, Cumilla household from the original report. The report rounded up to 70 strings (280 modules); this calculator rounds up to the next whole string.");
+})();
+</script>
+</body>
+</html>
