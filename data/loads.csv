@@ -1,0 +1,9 @@
+equipment,amount,power_w,hours_per_day
+Light,10,95,4
+Energy Saving Light,4,45,6
+Fridge,2,200,24
+Fan,6,150,12
+Iron,1,1000,0.5
+TV,2,138,5
+Washing Machine,1,2200,1
+Dishwasher,1,1900,1
