@@ -500,7 +500,7 @@ $("addRow").addEventListener("click",function(){state.loads.push({name:"",qty:1,
 $("preset").innerHTML+=PRESETS.map(function(p,i){return '<option value="'+i+'">'+p[0]+' ('+p[2]+' W)</option>'}).join("");
 $("preset").addEventListener("change",function(){var v=this.value;if(v==="")return;var p=PRESETS[+v];state.loads.push({name:p[0],qty:p[1],power:p[2],hours:p[3],sim:true});this.value="";renderRows();calc()});
 $("tiltLat").addEventListener("click",function(){var l=num($("lat").value);if(!isFinite(l)){toast("Enter the latitude first");return}$("tilt").value=Math.round(Math.abs(l));calc()});
-$("btnExample").addEventListener("click",function(){loadData(EXAMPLE,"<b>Example loaded:</b> the Debidwar, Cumilla household from the original report. The report rounded up to 70 strings (280 modules); this calculator rounds up to the next whole string.")});
+$("btnExample").addEventListener("click",function(){loadData(EXAMPLE,"<b>Example loaded:</b> Example household from the original report. The report rounded up to 70 strings (280 modules); this calculator rounds up to the next whole string.")});
 $("btnClear").addEventListener("click",function(){loadData({loads:[],irr:[],p:BLANK_P},"<b>Your own system:</b> add your appliances and monthly irradiation below. Efficiency and design values are typical defaults.");$("addRow").click()});
 
 /* ---------- start ---------- */
